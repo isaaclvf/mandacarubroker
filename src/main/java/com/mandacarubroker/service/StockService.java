@@ -28,12 +28,6 @@ public class StockService {
         return stockRepository.findById(id);
     }
 
-    public Stock createStock(RequestStockDTO data) {
-        Stock novaAcao = new Stock(data);
-        validateRequestStockDTO(data);
-        return stockRepository.save(novaAcao);
-    }
-
     public Optional<Stock> updateStock(String id, Stock updatedStock) {
         return stockRepository.findById(id)
                 .map(stock -> {
@@ -68,10 +62,10 @@ public class StockService {
         }
     }
 
-    public void validateAndCreateStock(RequestStockDTO data) {
+    public Stock validateAndCreateStock(RequestStockDTO data) {
         validateRequestStockDTO(data);
 
-        Stock novaAcao = new Stock(data);
-        stockRepository.save(novaAcao);
+        Stock stock = new Stock(data);
+        return stockRepository.save(stock);
     }
 }

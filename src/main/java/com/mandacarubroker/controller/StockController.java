@@ -31,7 +31,7 @@ public class StockController {
 
     @PostMapping
     public ResponseEntity<Stock> createStock(@RequestBody RequestStockDTO data) {
-        Stock createdStock = stockService.createStock(data);
+        Stock createdStock = stockService.validateAndCreateStock(data);
         return ResponseEntity.ok(createdStock);
     }
 
