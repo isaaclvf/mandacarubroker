@@ -3,10 +3,12 @@ package com.mandacarubroker.controller;
 
 import com.mandacarubroker.domain.stock.*;
 import com.mandacarubroker.service.*;
+import jakarta.validation.ValidationException;
 import org.springframework.http.*;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import java.util.Optional;
 
 
 @RestController
@@ -20,29 +22,43 @@ public class StockController {
     }
 
     @GetMapping
-    public List<Stock> getAllStocks() {
-        return stockService.getAllStocks();
+    public ResponseEntity<List<Stock>> getAllStocks() {
+        List<Stock> stocks = stockService.getAllStocks();
+        return ResponseEntity.ok(stocks);
     }
 
     @GetMapping("/{id}")
-    public Stock getStockById(@PathVariable String id) {
-        return stockService.getStockById(id).orElse(null);
+    public ResponseEntity<Stock> getStockById(@PathVariable String id) {
+        Optional<Stock> stock = stockService.getStockById(id);
+
+        return stock.map(ResponseEntity::ok).orElseGet(() -> ResponseEntity.notFound().build());
     }
 
     @PostMapping
     public ResponseEntity<Stock> createStock(@RequestBody RequestStockDTO data) {
-        Stock createdStock = stockService.validateAndCreateStock(data);
-        return ResponseEntity.ok(createdStock);
+        try {
+            Stock createdStock = stockService.validateAndCreateStock(data);
+            return ResponseEntity.status(HttpStatus.CREATED).body(createdStock);
+        } catch (ValidationException ex) {
+            return ResponseEntity.badRequest().build();
+        }
     }
 
     @PutMapping("/{id}")
-    public Stock updateStock(@PathVariable String id, @RequestBody Stock updatedStock) {
-        return stockService.updateStock(id, updatedStock).orElse(null);
+    public ResponseEntity<Stock> updateStock(@PathVariable String id, @RequestBody Stock updatedStock) {
+        Optional<Stock> updated = stockService.updateStock(id, updatedStock);
+
+        return updated.map(ResponseEntity::ok).orElseGet(() -> ResponseEntity.notFound().build());
     }
 
     @DeleteMapping("/{id}")
-    public void deleteStock(@PathVariable String id) {
-        stockService.deleteStock(id);
+    public ResponseEntity<Void> deleteStock(@PathVariable String id) {
+        try {
+            stockService.deleteStock(id);
+            return ResponseEntity.noContent().build(); // Successfully deleted
+        } catch (StockNotFoundException ex) {
+            return ResponseEntity.notFound().build(); // Stock not found
+        }
     }
 
 }
