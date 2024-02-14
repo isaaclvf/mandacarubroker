@@ -6,9 +6,11 @@ import com.mandacarubroker.domain.stock.StockRepository;
 import jakarta.validation.*;
 import org.springframework.stereotype.Service;
 
+import java.util.HashSet;
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 @Service
 public class StockService {
@@ -45,22 +47,26 @@ public class StockService {
     }
 
     public static void validateRequestStockDTO(RequestStockDTO data) {
-        ValidatorFactory factory = Validation.buildDefaultValidatorFactory();
-        Validator validator = factory.getValidator();
+        Validator validator;
+
+        try (ValidatorFactory factory = Validation.buildDefaultValidatorFactory()) {
+            validator = factory.getValidator();
+        } catch (Exception e) {
+            System.out.println("Error building validator factory: " + e.getMessage());
+            return;
+        }
+
         Set<ConstraintViolation<RequestStockDTO>> violations = validator.validate(data);
 
         if (!violations.isEmpty()) {
-            StringBuilder errorMessage = new StringBuilder("Validation failed. Details: ");
+            String errorMessage = violations.stream()
+                    .map(violation -> String.format("[%s: %s]", violation.getPropertyPath(), violation.getMessage()))
+                    .collect(Collectors.joining(", ", "Validation failed. Details: ", "."));
 
-            for (ConstraintViolation<RequestStockDTO> violation : violations) {
-                errorMessage.append(String.format("[%s: %s], ", violation.getPropertyPath(), violation.getMessage()));
-            }
-
-            errorMessage.delete(errorMessage.length() - 2, errorMessage.length());
-
-            throw new ConstraintViolationException(errorMessage.toString(), violations);
+            throw new ConstraintViolationException(errorMessage, new HashSet<>(violations));
         }
     }
+
 
     public Stock validateAndCreateStock(RequestStockDTO data) {
         validateRequestStockDTO(data);
