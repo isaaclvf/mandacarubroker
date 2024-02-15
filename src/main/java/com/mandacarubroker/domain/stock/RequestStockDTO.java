@@ -11,8 +11,7 @@ public record RequestStockDTO(
         String symbol,
 
         @NotBlank(message = "Company name cannot be blank")
-        // Alphanumeric characters and white spaces only
-        @Pattern(regexp = "^[a-zA-Z\\d\\s]+$", message = "Company name has invalid characters")
+        @Pattern(regexp = "^[a-zA-Z\\d\\s]+$", message = "Company name has invalid characters. Alphanumeric characters and white spaces only.")
         String companyName,
 
         @NotNull(message = "Price cannot be null")
